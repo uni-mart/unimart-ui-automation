@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "e2e": "cypress open",
+    "cy:runAll": "cypress run --env --reporter mocha-allure-reporter",
+    "cy:runJenkins": "NO_COLOR=1 cypress run --config video=false,screenshotOnRunFailure=false -reporter mocha-allure-reporter",
+    "cy:runSpec": "cypress run --spec cypress/e2e/spec.cy.js --env --reporter mocha-allure-reporter ",
+    "report": "allure generate allure-results --clean -o allure-report && allure open allure-report"
   },
   "repository": {
     "type": "git",
@@ -17,6 +22,16 @@
   },
   "homepage": "https://github.com/uni-mart/unimart-automation#readme",
   "dependencies": {
-    "cypress": "^12.9.0"
+    "cypress": "^12.9.0",
+    "@shelex/cypress-allure-plugin": "^2.35.2",
+    "allure-commandline": "^2.21.0",
+    "cypress-fill-command": "^1.0.2",
+    "cypress-xpath": "^2.0.1",
+    "graphql": "^16.6.0",
+    "graphql-request": "^5.2.0",
+    "mocha": "^10.2.0"
+  },
+  "devDependencies": {
+    "mocha-allure-reporter": "^1.4.0"
   }
 }
