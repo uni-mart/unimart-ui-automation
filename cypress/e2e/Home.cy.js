@@ -8,5 +8,6 @@ describe('Test Home Page', () => {
     cy.get('[href="/login"]', {timeout: 10000}).should('be.visible');
     cy.get('[href="/login"]').should('not.be.disabled');
     cy.get('[href="/login"]').click();
+    cy.screenshot('Home');
   })
 });

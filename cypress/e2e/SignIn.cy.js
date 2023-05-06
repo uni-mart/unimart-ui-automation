@@ -8,5 +8,6 @@ describe('Test Signin field', () => {
         cy.get('.col > a', {timeout: 10000}).should('be.visible');
         cy.get('.col > a').should('not.be.disabled');
         cy.get('.col > a').click();
+        cy.screenshot('SignIn');   
       }); 
   });

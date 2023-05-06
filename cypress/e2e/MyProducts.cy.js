@@ -11,6 +11,7 @@ describe('Test Product Page', () => {
       cy.get('.card-body', { timeout: 10000 }).should('be.visible');
       cy.get('.list-group', {timeout: 10000}).should('be.visible');
       cy.get("input[placeholder='Search']").should('be.visible');
+      cy.screenshot('Product');
   })
       
   });
