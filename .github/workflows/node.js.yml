@@ -1,0 +1,87 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: CI CD Pipeline for UI Deployment
+
+on:
+  push:
+    branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+
+env:
+  DOCKERHUB_USERNAME: bitcode001
+  DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    concurrency: ci-${{github.ref}}
+    
+    steps:
+      - name: Setup Node.js and npm
+        uses: actions/setup-node@v2
+        id: setup-environment
+        with:
+          node-version: '16.16.0'
+          npm-version: '8.11.0'
+
+      - name: Checkout UI repository
+        uses: actions/checkout@v2
+        id: checkout-ui
+        with:
+          repository: uni-mart/unimart-ui
+          ref: main
+          path: ui
+          
+      - name: Install dependencies, build and preview UI
+        working-directory: ui
+        run: |
+          npm install
+          npm run build
+          npm run preview &
+
+      - name: Checkout UI-Automation repository
+        uses: actions/checkout@v2
+        id: checkout-ui-automation
+        with:
+          repository: uni-mart/unimart-ui-automation
+          ref: main
+          path: ui-automation
+
+      - name: Run Cypress tests
+        id: run-cypress-test
+        working-directory: ui-automation
+        run: |
+          npm install
+          npm run cy:runHeadless
+          npm run cy:genReport
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: allure-report
+          folder: allure-report
+          token: ${{ secrets.GITHUB_TOKEN }}
+          clean: true
+          commit_message: Deploy Allure Report v.${{github.run_number}} to GitHub Pages
+          enable_jekyll: false
+          workspace: ui-automation
+
+      - name: Build Docker image
+        working-directory: ui
+        id: build-docker-image
+        if: ${{ steps.run-cypress-test == 'success' }}
+        run: |
+          docker build -t $DOCKERHUB_USERNAME/unimart/ui:$github.run_number .
+          
+      - name: Tag and push Docker image
+        working-directory: ui
+        id: tag-push-docker-image
+        if: ${{ steps.run-cypress-test == 'success' }}
+        run: |
+          docker tag $DOCKERHUB_USERNAME/unimart/ui:$github.run_number $DOCKERHUB_REGISTRY/unimart/ui:latest
+          docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+          docker push $DOCKERHUB_USERNAME/unimart/ui:$github.run_number
+          docker push $DOCKERHUB_USERNAME/unimart/ui:latest
